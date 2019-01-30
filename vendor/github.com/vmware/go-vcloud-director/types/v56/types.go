@@ -203,11 +203,11 @@ type IPScopes struct {
 // Since: 0.9
 type NetworkConfiguration struct {
 	BackwardCompatibilityMode      bool             `xml:"BackwardCompatibilityMode"`
-	Features                       *NetworkFeatures `xml:"Features,omitempty"`
-	ParentNetwork                  *Reference       `xml:"ParentNetwork,omitempty"`
 	IPScopes                       *IPScopes        `xml:"IpScopes,omitempty"`
+	ParentNetwork                  *Reference       `xml:"ParentNetwork,omitempty"`
 	FenceMode                      string           `xml:"FenceMode"`
 	RetainNetInfoAcrossDeployments bool             `xml:"RetainNetInfoAcrossDeployments"`
+	Features                       *NetworkFeatures `xml:"Features,omitempty"`
 	// TODO: Not Implemented
 	// RouterInfo                     RouterInfo           `xml:"RouterInfo,omitempty"`
 	// SyslogServerSettings           SyslogServerSettings `xml:"SyslogServerSettings,omitempty"`
@@ -226,7 +226,6 @@ type VAppNetworkConfiguration struct {
 	Configuration *NetworkConfiguration `xml:"Configuration"`
 	Description   string                `xml:"Description,omitempty"`
 	IsDeployed    bool                  `xml:"IsDeployed"`
-	Link          *Link                 `xml:"Link,omitempty"`
 }
 
 // NetworkConfigSection is container for vApp networks.
@@ -257,12 +256,22 @@ type NetworkConfigSection struct {
 type NetworkConnection struct {
 	Network                 string `xml:"network,attr"`                      // Name of the network to which this NIC is connected.
 	NetworkConnectionIndex  int    `xml:"NetworkConnectionIndex"`            // Virtual slot number associated with this NIC. First slot number is 0.
-	NeedsCustomization      bool   `xml:"needsCustomization,attr,omitempty"` // True if this NIC needs customization.
-	ExternalIPAddress       string `xml:"ExternalIpAddress,omitempty"`       // If the network to which this NIC connects provides NAT services, the external address assigned to this NIC appears here.
-	IPAddress               string `xml:"IpAddress,omitempty"`               // IP address assigned to this NIC.
+  IPAddress               string `xml:"IpAddress,omitempty"`               // IP address assigned to this NIC.
+  ExternalIPAddress       string `xml:"ExternalIpAddress,omitempty"`       // If the network to which this NIC connects provides NAT services, the external address assigned to this NIC appears here.
 	IsConnected             bool   `xml:"IsConnected"`                       // If the virtual machine is undeployed, this value specifies whether the NIC should be connected upon deployment. If the virtual machine is deployed, this value reports the current status of this NIC's connection, and can be updated to change that connection status.
+  MACAddress              string `xml:"MACAddress,omitempty"`              // MAC address associated with the NIC.
 	IPAddressAllocationMode string `xml:"IpAddressAllocationMode"`           // IP address allocation mode for this connection. One of: POOL (A static IP address is allocated automatically from a pool of addresses.) DHCP (The IP address is obtained from a DHCP service.) MANUAL (The IP address is assigned manually in the IpAddress element.) NONE (No IP addressing mode specified.)
-	MACAddress              string `xml:"MACAddress,omitempty"`              // MAC address associated with the NIC.
+
+	// Type of network adapter to be used for this connection. One of:
+	// VLANCE (emulated version of the AMD 79C970 PCnet32-LANCE NIC)
+	// E1000 (emulated version of the Intel 82545EM Gigabit Ethernet NIC)
+	// E1000E (emulates a newer model of Intel Gigabit NIC (number 82574))
+	// VMXNET (has no physical counterpart; optimized for performance in a virtual machine)
+	// VMXNET2 (based on the VMXNET adapter but provides some high-performance features)
+	// VMXNET3 (next generation of a paravirtualized NIC designed for performance; not related to VMXNET or VMXNET2)
+	// FLEXIBLE (identifies itself as a Vlance adapter when a virtual machine boots, but initializes itself and functions as either a Vlance or a VMXNET adapter, depending on which driver initializes it)
+	NetworkAdapterType      string `xml:"NetworkAdapterType,omitempty"`
+	NeedsCustomization      bool   `xml:"needsCustomization,attr,omitempty"` // True if this NIC needs customization.
 }
 
 // NetworkConnectionSection the container for the network connections of this virtual machine.
@@ -825,6 +834,7 @@ type CatalogItems struct {
 // Type: CatalogType
 // Namespace: http://www.vmware.com/vcloud/v1.5
 // Description: Represents the user view of a Catalog object.
+// https://code.vmware.com/apis/287/vcloud#/doc/doc/types/CatalogType.html
 // Since: 0.9
 type Catalog struct {
 	HREF          string           `xml:"href,attr,omitempty"`
@@ -832,40 +842,30 @@ type Catalog struct {
 	ID            string           `xml:"id,attr,omitempty"`
 	OperationKey  string           `xml:"operationKey,attr,omitempty"`
 	Name          string           `xml:"name,attr"`
-	CatalogItems  []*CatalogItems  `xml:"CatalogItems"`
-	DateCreated   string           `xml:"DateCreated"`
-	Description   string           `xml:"Description"`
-	IsPublished   bool             `xml:"IsPublished"`
-	Link          LinkList         `xml:"Link"`
+	CatalogItems  []*CatalogItems  `xml:"CatalogItems,omitempty"`
+	DateCreated   string           `xml:"DateCreated,omitempty"`
+	Description   string           `xml:"Description,omitempty"`
+	IsPublished   bool             `xml:"IsPublished,omitempty"`
+	Link          LinkList         `xml:"Link,omitempty"`
 	Owner         *Owner           `xml:"Owner,omitempty"`
 	Tasks         *TasksInProgress `xml:"Tasks,omitempty"`
-	VersionNumber int64            `xml:"VersionNumber"`
+	VersionNumber int64            `xml:"VersionNumber,omitempty"`
 }
 
 // AdminCatalog represents the Admin view of a Catalog object.
 // Type: AdminCatalogType
 // Namespace: http://www.vmware.com/vcloud/v1.5
 // Description: Represents the Admin view of a Catalog object.
+// https://code.vmware.com/apis/287/vcloud#/doc/doc/types/AdminCatalogType.html
 // Since: 0.9
 type AdminCatalog struct {
+	Catalog
 	XMLName                      xml.Name                      `xml:"AdminCatalog"`
 	Xmlns                        string                        `xml:"xmlns,attr"`
-	HREF                         string                        `xml:"href,attr,omitempty"`
-	Type                         string                        `xml:"type,attr,omitempty"`
-	ID                           string                        `xml:"id,attr,omitempty"`
-	OperationKey                 string                        `xml:"operationKey,attr,omitempty"`
-	Name                         string                        `xml:"name,attr"`
-	CatalogItems                 []*CatalogItems               `xml:"CatalogItems,omitempty"`
-	DateCreated                  string                        `xml:"DateCreated,omitempty"`
 	PublishExternalCatalogParams *PublishExternalCatalogParams `xml:"PublishExternalCatalogParams,omitempty"`
 	CatalogStorageProfiles       *CatalogStorageProfiles       `xml:"CatalogStorageProfiles,omitempty"`
 	ExternalCatalogSubscription  *ExternalCatalogSubscription  `xml:"ExternalCatalogSubscriptionParams,omitempty"`
-	Description                  string                        `xml:"Description"`
 	IsPublished                  bool                          `xml:"IsPublished,omitempty"`
-	Link                         LinkList                      `xml:"Link,omitempty"`
-	Owner                        *Owner                        `xml:"Owner,omitempty"`
-	Tasks                        *TasksInProgress              `xml:"Tasks,omitempty"`
-	VersionNumber                int64                         `xml:"VersionNumber"`
 }
 
 // PublishExternalCatalogParamsType represents the configuration parameters of a catalog published externally

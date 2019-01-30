@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 VMware, Inc.  All rights reserved.  Licensed under the Apache v2 License.
+ * Copyright 2019 VMware, Inc.  All rights reserved.  Licensed under the Apache v2 License.
  */
 
 // Package govcd provides a simple binding for vCloud Director REST APIs.
@@ -9,13 +9,14 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"github.com/vmware/go-vcloud-director/types/v56"
-	"github.com/vmware/go-vcloud-director/util"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
+
+	"github.com/vmware/go-vcloud-director/types/v56"
+	"github.com/vmware/go-vcloud-director/util"
 )
 
 // Client provides a client to vCloud Director, values can be populated automatically using the Authenticate method.
